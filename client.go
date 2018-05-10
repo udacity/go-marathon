@@ -193,19 +193,23 @@ var (
 	// Default HTTP client used for SSE subscription requests
 	// It is invalid to set client.Timeout because it includes time to read response so
 	// set dial, tls handshake and response header timeouts instead
-	defaultHTTPSSEClient = &http.Client{
-		Transport: &http.Transport{
-			Dial: (&net.Dialer{
-				Timeout: 5 * time.Second,
-			}).Dial,
-			ResponseHeaderTimeout: 10 * time.Second,
-			TLSHandshakeTimeout:   5 * time.Second,
+	defaultHTTPSSEClient = &defaultClient {
+		Client: http.Client{
+			Transport: &http.Transport{
+				Dial: (&net.Dialer{
+					Timeout: 5 * time.Second,
+				}).Dial,
+				ResponseHeaderTimeout: 10 * time.Second,
+				TLSHandshakeTimeout:   5 * time.Second,
+			},
 		},
 	}
 
 	// Default HTTP client used for non SSE requests
-	defaultHTTPClient = &http.Client{
-		Timeout: 10 * time.Second,
+	defaultHTTPClient = &defaultClient{
+		Client: http.Client {
+			Timeout: 10 * time.Second,
+		},
 	}
 )
 
@@ -234,6 +238,18 @@ type marathonClient struct {
 	debugLog func(format string, v ...interface{})
 	// the marathon HTTP client to ensure consistency in requests
 	client *httpClient
+}
+
+type HTTPClient interface {
+	GetTransport() http.RoundTripper
+	GetCheckRedirect() func(req *http.Request, via []*http.Request) error
+	GetJar() http.CookieJar
+	GetTimeOut() time.Duration
+	Do(request *http.Request) (response *http.Response, err error)
+}
+
+type defaultClient struct {
+	http.Client
 }
 
 type httpClient struct {
@@ -491,4 +507,24 @@ var oneLogLineRegex = regexp.MustCompile(`(?m)^\s*`)
 // escapes new line characters.
 func oneLogLine(in []byte) []byte {
 	return bytes.Replace(oneLogLineRegex.ReplaceAll(in, nil), []byte("\n"), []byte("\\n "), -1)
+}
+
+func (d *defaultClient) GetTransport() http.RoundTripper {
+	return d.Client.Transport
+}
+
+func (d *defaultClient) GetCheckRedirect() func(req *http.Request, via []*http.Request) error {
+	return d.Client.CheckRedirect
+}
+
+func (d *defaultClient) GetJar() http.CookieJar {
+	return d.Client.Jar
+}
+
+func (d *defaultClient) GetTimeOut() time.Duration {
+	return d.Client.Timeout
+}
+
+func Do(request *http.Request) (response *http.Response, err error) {
+	return nil, nil
 }

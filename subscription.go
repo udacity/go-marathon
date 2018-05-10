@@ -171,10 +171,10 @@ func (r *marathonClient) registerSSESubscription() error {
 		return nil
 	}
 
-	if r.config.HTTPSSEClient.Timeout != 0 {
+	if r.client.config.HTTPSSEClient.GetTimeOut() != 0 {
 		return fmt.Errorf(
 			"global timeout must not be set for SSE connections (found %s) -- remove global timeout from HTTP client or provide separate SSE HTTP client without global timeout",
-			r.config.HTTPSSEClient.Timeout,
+			r.client.config.HTTPSSEClient.GetTimeOut(),
 		)
 	}
 
@@ -215,10 +215,10 @@ func (r *marathonClient) connectToSSE() (*eventsource.Stream, error) {
 		// its underlying fields for performance reasons. See note that at least the Transport
 		// should be reused here: https://golang.org/pkg/net/http/#Client
 		httpClient := &http.Client{
-			Transport:     r.config.HTTPSSEClient.Transport,
-			CheckRedirect: r.config.HTTPSSEClient.CheckRedirect,
-			Jar:           r.config.HTTPSSEClient.Jar,
-			Timeout:       r.config.HTTPSSEClient.Timeout,
+			Transport:     r.client.config.HTTPSSEClient.GetTransport(),
+			CheckRedirect: r.client.config.HTTPSSEClient.GetCheckRedirect(),
+			Jar:           r.client.config.HTTPSSEClient.GetJar(),
+			Timeout:       r.client.config.HTTPSSEClient.GetTimeOut(),
 		}
 
 		stream, err := eventsource.SubscribeWith("", httpClient, request)

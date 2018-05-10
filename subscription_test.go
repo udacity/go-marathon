@@ -17,13 +17,13 @@ limitations under the License.
 package marathon
 
 import (
-	"net"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net"
 )
 
 const (
@@ -300,8 +300,10 @@ func TestUnsubscribe(t *testing.T) {
 
 func TestSSEWithGlobalTimeout(t *testing.T) {
 	clientCfg := NewDefaultConfig()
-	clientCfg.HTTPSSEClient = &http.Client{
-		Timeout: 1 * time.Second,
+	clientCfg.HTTPSSEClient = &defaultClient {
+		Client: http.Client {
+			Timeout: 1 * time.Second,
+		},
 	}
 	config := configContainer{
 		client: &clientCfg,
@@ -414,13 +416,15 @@ func TestConnectToSSEFailure(t *testing.T) {
 
 func TestRegisterSEESubscriptionReconnectsStreamOnError(t *testing.T) {
 	clientCfg := NewDefaultConfig()
-	clientCfg.HTTPSSEClient = &http.Client{
-		Transport: &http.Transport{
-			Dial: (&net.Dialer{
-				// set timeout to a small fraction of SSEConnectWaitTime to give client enough time
-				// to detect error and reconnect during sleep
-				Timeout: SSEConnectWaitTime / 10,
-			}).Dial,
+	clientCfg.HTTPSSEClient = &defaultClient{
+		Client: http.Client{
+			Transport: &http.Transport{
+				Dial: (&net.Dialer{
+					// set timeout to a small fraction of SSEConnectWaitTime to give client enough time
+					// to detect error and reconnect during sleep
+					Timeout: SSEConnectWaitTime / 10,
+				}).Dial,
+			},
 		},
 	}
 	clientCfg.EventsTransport = EventsTransportSSE
