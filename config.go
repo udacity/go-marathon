@@ -19,7 +19,6 @@ package marathon
 import (
 	"io"
 	"io/ioutil"
-	"net/http"
 	"time"
 )
 
@@ -51,9 +50,9 @@ type Config struct {
 	// LogOutput the output for debug log messages
 	LogOutput io.Writer
 	// HTTPClient is the HTTP client
-	HTTPClient *http.Client
+	HTTPClient HTTPClient
 	// HTTPSSEClient is the HTTP client used for SSE subscriptions, can't have client.Timeout set
-	HTTPSSEClient *http.Client
+	HTTPSSEClient HTTPClient
 	// wait time (in milliseconds) between repetitive requests to the API during polling
 	PollingWaitTime time.Duration
 }

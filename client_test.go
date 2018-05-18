@@ -38,9 +38,8 @@ func TestNewClient(t *testing.T) {
 
 	conf := cl.(*marathonClient).config
 
-	assert.Equal(t, conf.HTTPClient, defaultHTTPClient)
-	assert.Equal(t, conf.HTTPSSEClient, defaultHTTPSSEClient)
-	assert.Zero(t, conf.HTTPSSEClient.Timeout)
+	assert.Equal(t, conf.HTTPClient, DefaultHTTPClient)
+	assert.Equal(t, conf.HTTPSSEClient, DefaultHTTPSSEClient)
 	assert.Equal(t, conf.PollingWaitTime, defaultPollingWaitTime)
 }
 
@@ -49,20 +48,20 @@ func TestHTTPClientDefaults(t *testing.T) {
 
 	tests := []struct {
 		name                  string
-		httpRegularClient     *http.Client
-		httpSSEClient         *http.Client
-		wantHTTPRegularClient *http.Client
-		wantHTTPSSEClient     *http.Client
+		httpRegularClient     HTTPClient
+		httpSSEClient         HTTPClient
+		wantHTTPRegularClient HTTPClient
+		wantHTTPSSEClient     HTTPClient
 	}{
 		{
 			name:                  "regular HTTP client missing",
 			httpRegularClient:     nil,
-			wantHTTPRegularClient: defaultHTTPClient,
+			wantHTTPRegularClient: DefaultHTTPClient,
 		},
 		{
 			name:              "SSE and regular HTTP clients missing",
 			httpSSEClient:     nil,
-			wantHTTPSSEClient: defaultHTTPSSEClient,
+			wantHTTPSSEClient: DefaultHTTPSSEClient,
 		},
 		{
 			name:              "SSE HTTP client missing, regular HTTP client available",

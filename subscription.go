@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/donovanhide/eventsource"
+	"github.com/udacity/eventsource"
 )
 
 // Subscriptions is a collection to urls that marathon is implementing a callback on
@@ -171,13 +171,6 @@ func (r *marathonClient) registerSSESubscription() error {
 		return nil
 	}
 
-	if r.config.HTTPSSEClient.Timeout != 0 {
-		return fmt.Errorf(
-			"global timeout must not be set for SSE connections (found %s) -- remove global timeout from HTTP client or provide separate SSE HTTP client without global timeout",
-			r.config.HTTPSSEClient.Timeout,
-		)
-	}
-
 	go func() {
 		for {
 			stream, err := r.connectToSSE()
@@ -211,17 +204,7 @@ func (r *marathonClient) connectToSSE() (*eventsource.Stream, error) {
 			}
 		}
 
-		// The event source library manipulates the HTTPClient. So we create a new one and copy
-		// its underlying fields for performance reasons. See note that at least the Transport
-		// should be reused here: https://golang.org/pkg/net/http/#Client
-		httpClient := &http.Client{
-			Transport:     r.config.HTTPSSEClient.Transport,
-			CheckRedirect: r.config.HTTPSSEClient.CheckRedirect,
-			Jar:           r.config.HTTPSSEClient.Jar,
-			Timeout:       r.config.HTTPSSEClient.Timeout,
-		}
-
-		stream, err := eventsource.SubscribeWith("", httpClient, request)
+		stream, err := eventsource.SubscribeWith("", r.config.HTTPSSEClient, request)
 		if err != nil {
 			r.debugLog("Error subscribing to Marathon event stream: %s", err)
 			r.hosts.markDown(member)

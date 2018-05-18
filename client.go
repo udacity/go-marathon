@@ -31,6 +31,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/udacity/eventsource"
 )
 
 // Marathon is the interface to the marathon API
@@ -190,10 +191,10 @@ var (
 	// ErrTimeoutError is thrown when the operation has timed out
 	ErrTimeoutError = errors.New("the operation has timed out")
 
-	// Default HTTP client used for SSE subscription requests
+	// DefaultHTTPSSEClient is the default HTTP client used for SSE subscription requests
 	// It is invalid to set client.Timeout because it includes time to read response so
 	// set dial, tls handshake and response header timeouts instead
-	defaultHTTPSSEClient = &http.Client{
+	DefaultHTTPSSEClient = &http.Client{
 		Transport: &http.Transport{
 			Dial: (&net.Dialer{
 				Timeout: 5 * time.Second,
@@ -201,10 +202,11 @@ var (
 			ResponseHeaderTimeout: 10 * time.Second,
 			TLSHandshakeTimeout:   5 * time.Second,
 		},
+		CheckRedirect: eventsource.CheckRedirect,
 	}
 
-	// Default HTTP client used for non SSE requests
-	defaultHTTPClient = &http.Client{
+	// DefaultHTTPClient is the default HTTP client used for non SSE requests
+	DefaultHTTPClient = &http.Client{
 		Timeout: 10 * time.Second,
 	}
 )
@@ -236,6 +238,10 @@ type marathonClient struct {
 	client *httpClient
 }
 
+type HTTPClient interface {
+	Do(request *http.Request) (response *http.Response, err error)
+}
+
 type httpClient struct {
 	// the configuration for the marathon HTTP client
 	config Config
@@ -249,10 +255,11 @@ type newRequestError struct {
 // NewClient creates a new marathon client
 //		config:			the configuration to use
 func NewClient(config Config) (Marathon, error) {
+
 	// step: if the SSE HTTP client is missing, prefer a configured regular
 	// client, and otherwise use the default SSE HTTP client.
 	if config.HTTPSSEClient == nil {
-		config.HTTPSSEClient = defaultHTTPSSEClient
+		config.HTTPSSEClient = DefaultHTTPSSEClient
 		if config.HTTPClient != nil {
 			config.HTTPSSEClient = config.HTTPClient
 		}
@@ -260,7 +267,7 @@ func NewClient(config Config) (Marathon, error) {
 
 	// step: if a regular HTTP client is missing, use the default one.
 	if config.HTTPClient == nil {
-		config.HTTPClient = defaultHTTPClient
+		config.HTTPClient = DefaultHTTPClient
 	}
 
 	// step: if no polling wait time is set, default to 500 milliseconds.

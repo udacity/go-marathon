@@ -27,7 +27,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/donovanhide/eventsource"
+	"github.com/udacity/eventsource"
 	yaml "gopkg.in/yaml.v2"
 )
 
